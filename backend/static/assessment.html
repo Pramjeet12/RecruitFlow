@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assessment Interview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99,102,241,0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 18px rgba(99,102,241,0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+    }
+    .pulse-ai { animation: pulse-ring 1.5s ease-out infinite; }
+    @keyframes pulse-ring-green {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34,197,94,0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 18px rgba(34,197,94,0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    }
+    .pulse-candidate { animation: pulse-ring-green 1.5s ease-out infinite; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-center p-4">
+
+  <!-- Loading -->
+  <div id="state-loading" class="text-center">
+    <div class="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-slate-300">Loading assessment...</p>
+  </div>
+
+  <!-- Error -->
+  <div id="state-error" class="hidden text-center max-w-md">
+    <div class="text-red-400 text-5xl mb-4">⚠</div>
+    <h2 class="text-xl font-semibold mb-2">Assessment Not Found</h2>
+    <p id="error-msg" class="text-slate-400">This assessment link is invalid or has expired.</p>
+  </div>
+
+  <!-- CV Upload -->
+  <div id="state-cv-upload" class="hidden w-full max-w-lg">
+    <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 shadow-2xl">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">📄</div>
+        <h1 class="text-2xl font-bold" id="cv-assessment-name">Technical Assessment</h1>
+        <p class="text-slate-400 mt-1">Hello, <span id="cv-candidate-name" class="text-indigo-300 font-medium">Candidate</span></p>
+        <p class="text-slate-500 mt-3 text-sm">This is a voice AI interview. Duration: <span id="cv-duration" class="text-white font-medium">20</span> minutes.</p>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm text-slate-300 mb-2 font-medium">Upload your CV (PDF)</label>
+        <div id="drop-zone" class="border-2 border-dashed border-indigo-500/40 hover:border-indigo-400 rounded-xl p-8 text-center cursor-pointer transition-colors">
+          <div class="text-3xl mb-2">📁</div>
+          <p class="text-slate-400 text-sm">Click to browse or drag &amp; drop</p>
+          <p class="text-slate-600 text-xs mt-1">PDF files only</p>
+          <input id="cv-file-input" type="file" accept=".pdf" class="hidden" />
+        </div>
+        <div id="cv-file-name" class="hidden mt-2 text-sm text-green-400 text-center"></div>
+        <div id="cv-upload-error" class="hidden mt-2 text-sm text-red-400 text-center"></div>
+      </div>
+
+      <button id="cv-upload-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors" disabled>
+        Upload &amp; Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- Ready -->
+  <div id="state-ready" class="hidden w-full max-w-lg">
+    <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-8 shadow-2xl text-center">
+      <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">🎙️</div>
+      <h1 class="text-2xl font-bold mb-2" id="ready-assessment-name">Technical Assessment</h1>
+      <p class="text-slate-400 mb-6">You're all set, <span id="ready-candidate-name" class="text-indigo-300 font-medium">Candidate</span>!</p>
+
+      <div class="bg-white/5 rounded-xl p-4 mb-6 text-left space-y-2 text-sm text-slate-300">
+        <div class="flex items-center gap-2"><span class="text-indigo-400">⏱</span> Duration: <span id="ready-duration" class="text-white font-medium">20 minutes</span></div>
+        <div class="flex items-center gap-2"><span class="text-indigo-400">🎤</span> AI interviewer will ask you questions based on the job &amp; your CV</div>
+        <div class="flex items-center gap-2"><span class="text-indigo-400">📌</span> Click Start and allow microphone access when prompted</div>
+        <div class="flex items-center gap-2"><span class="text-indigo-400">⚠️</span> Do not close or refresh the tab during the interview</div>
+      </div>
+
+      <button id="start-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-4 rounded-xl text-lg transition-colors">
+        Start Interview
+      </button>
+      <p id="start-error" class="hidden mt-3 text-red-400 text-sm"></p>
+    </div>
+  </div>
+
+  <!-- In Progress -->
+  <div id="state-in-progress" class="hidden w-full max-w-2xl">
+    <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="font-bold text-lg" id="progress-assessment-name">Interview</h2>
+          <p class="text-slate-400 text-sm" id="progress-candidate-name"></p>
+        </div>
+        <div class="text-right">
+          <div id="timer-display" class="text-3xl font-mono font-bold text-indigo-400">20:00</div>
+          <div class="text-xs text-slate-500 mt-1">remaining</div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-12 my-8">
+        <div class="text-center">
+          <div id="ai-indicator" class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">🤖</div>
+          <p class="text-xs text-slate-400">AI Interviewer</p>
+          <p id="ai-status" class="text-xs text-indigo-400 mt-1">Connecting...</p>
+        </div>
+        <div class="text-slate-600 text-2xl">⟷</div>
+        <div class="text-center">
+          <div id="candidate-indicator" class="w-20 h-20 bg-emerald-700 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">👤</div>
+          <p class="text-xs text-slate-400">You</p>
+          <p id="mic-status" class="text-xs text-emerald-400 mt-1">Microphone active</p>
+        </div>
+      </div>
+
+      <div class="bg-black/20 rounded-xl p-4 h-40 overflow-y-auto mb-4" id="transcript-box">
+        <p class="text-slate-500 text-sm text-center mt-12">Conversation will appear here...</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="mute-btn" class="flex-1 bg-white/10 hover:bg-white/20 text-white font-medium py-2 rounded-xl transition-colors text-sm">
+          🎤 Mute
+        </button>
+        <button id="end-btn" class="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 font-medium py-2 rounded-xl transition-colors text-sm">
+          End Interview
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed -->
+  <div id="state-completed" class="hidden w-full max-w-md text-center">
+    <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-10 shadow-2xl">
+      <div class="text-6xl mb-6">✅</div>
+      <h1 class="text-2xl font-bold mb-3">Interview Complete</h1>
+      <p class="text-slate-400 mb-2">Thank you for completing the assessment.</p>
+      <p class="text-slate-500 text-sm">Our team will review your interview and get back to you shortly.</p>
+    </div>
+  </div>
+
+<script>
+const uid = location.pathname.split('/').pop();
+const API = '/api/v1';
+
+let meta = null;
+let pc = null;
+let dc = null;
+let localStream = null;
+let transcript = [];
+let timerInterval = null;
+let secondsLeft = 0;
+let muted = false;
+let warningsSent = { twoMin: false, thirtyS: false, timeUp: false };
+
+function show(stateId) {
+  ['loading','error','cv-upload','ready','in-progress','completed'].forEach(s => {
+    document.getElementById('state-' + s).classList.add('hidden');
+  });
+  document.getElementById('state-' + stateId).classList.remove('hidden');
+}
+
+async function init() {
+  try {
+    const resp = await fetch(`${API}/assessment/${uid}`);
+    if (!resp.ok) { showError('Assessment not found.'); return; }
+    meta = await resp.json();
+
+    if (meta.status === 'completed') { show('completed'); return; }
+
+    document.getElementById('cv-assessment-name').textContent = meta.assessment_name || 'Technical Assessment';
+    document.getElementById('cv-candidate-name').textContent = meta.candidate_name || 'Candidate';
+    document.getElementById('cv-duration').textContent = meta.duration_minutes;
+    show('cv-upload');
+  } catch (e) {
+    showError('Failed to load assessment. Please check the link.');
+  }
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  show('error');
+}
+
+// ── CV Upload ──────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('cv-file-input');
+const uploadBtn = document.getElementById('cv-upload-btn');
+let selectedFile = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-indigo-400'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-indigo-400'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('border-indigo-400');
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(f) {
+  if (!f.name.toLowerCase().endsWith('.pdf')) {
+    document.getElementById('cv-upload-error').textContent = 'Please upload a PDF file.';
+    document.getElementById('cv-upload-error').classList.remove('hidden');
+    return;
+  }
+  selectedFile = f;
+  document.getElementById('cv-file-name').textContent = '✓ ' + f.name;
+  document.getElementById('cv-file-name').classList.remove('hidden');
+  document.getElementById('cv-upload-error').classList.add('hidden');
+  uploadBtn.disabled = false;
+}
+
+uploadBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = 'Uploading...';
+  try {
+    const form = new FormData();
+    form.append('file', selectedFile);
+    const resp = await fetch(`${API}/assessment/${uid}/cv-upload`, { method: 'POST', body: form });
+    if (!resp.ok) throw new Error('Upload failed');
+    document.getElementById('ready-assessment-name').textContent = meta.assessment_name || 'Technical Assessment';
+    document.getElementById('ready-candidate-name').textContent = meta.candidate_name || 'Candidate';
+    document.getElementById('ready-duration').textContent = meta.duration_minutes + ' minutes';
+    show('ready');
+  } catch (e) {
+    document.getElementById('cv-upload-error').textContent = 'Upload failed. Please try again.';
+    document.getElementById('cv-upload-error').classList.remove('hidden');
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = 'Upload & Continue →';
+  }
+});
+
+// ── Start Interview ────────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click', startInterview);
+
+async function startInterview() {
+  const btn = document.getElementById('start-btn');
+  const errEl = document.getElementById('start-error');
+  btn.disabled = true;
+  btn.textContent = 'Requesting microphone...';
+  errEl.classList.add('hidden');
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    errEl.textContent = 'Microphone access denied. Please allow microphone and try again.';
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Start Interview';
+    return;
+  }
+
+  btn.textContent = 'Connecting to AI...';
+
+  try {
+    const resp = await fetch(`${API}/assessment/${uid}/start`, { method: 'POST' });
+    if (!resp.ok) throw new Error('Failed to get session');
+    const session = await resp.json();
+
+    await connectWebRTC(session);
+
+    document.getElementById('progress-assessment-name').textContent = meta.assessment_name || 'Interview';
+    document.getElementById('progress-candidate-name').textContent = meta.candidate_name || '';
+    secondsLeft = session.duration_minutes * 60;
+    updateTimerDisplay();
+    show('in-progress');
+    startTimer();
+  } catch (e) {
+    errEl.textContent = 'Failed to connect: ' + e.message;
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'Start Interview';
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  }
+}
+
+async function connectWebRTC(session) {
+  pc = new RTCPeerConnection();
+
+  // Remote audio → play AI voice automatically
+  const audioEl = document.createElement('audio');
+  audioEl.autoplay = true;
+  document.body.appendChild(audioEl);
+  pc.ontrack = e => { audioEl.srcObject = e.streams[0]; };
+
+  // Local mic → send to OpenAI
+  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+  // Data channel for events
+  dc = pc.createDataChannel('oai-events');
+
+  dc.addEventListener('open', () => {
+    document.getElementById('ai-status').textContent = 'Connected';
+    dc.send(JSON.stringify({
+      type: 'session.update',
+      session: {
+        instructions: session.system_prompt,
+        voice: 'alloy',
+        modalities: ['text', 'audio'],
+        turn_detection: { type: 'server_vad' },
+        input_audio_transcription: { model: 'whisper-1' },
+      }
+    }));
+    // Prompt AI to greet candidate
+    dc.send(JSON.stringify({
+      type: 'response.create',
+      response: { modalities: ['text', 'audio'] }
+    }));
+  });
+
+  dc.addEventListener('message', e => {
+    try {
+      const event = JSON.parse(e.data);
+      transcript.push(event);
+      handleRealtimeEvent(event);
+    } catch (_) {}
+  });
+
+  // SDP offer → OpenAI
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  const sdpFormData = new FormData();
+  sdpFormData.append('sdp', offer.sdp);
+  const sdpResp = await fetch(
+    'https://api.openai.com/v1/realtime/calls',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.ephemeral_token}`
+      },
+      body: sdpFormData
+    }
+  );
+  if (!sdpResp.ok) {
+    const errText = await sdpResp.text();
+    throw new Error(`OpenAI WebRTC error ${sdpResp.status}: ${errText}`);
+  }
+  const sdpAnswer = await sdpResp.text();
+  await pc.setRemoteDescription({ type: 'answer', sdp: sdpAnswer });
+}
+
+function handleRealtimeEvent(event) {
+  const box = document.getElementById('transcript-box');
+  const aiIndicator = document.getElementById('ai-indicator');
+  const candidateIndicator = document.getElementById('candidate-indicator');
+
+  // AI speaking — pulse indicator
+  if (event.type === 'response.audio.delta' || event.type === 'response.output_audio.delta') {
+    aiIndicator.classList.add('pulse-ai');
+  }
+  if (event.type === 'response.done') {
+    aiIndicator.classList.remove('pulse-ai');
+  }
+
+  // AI transcript (GA: response.output_audio_transcript.done, beta: response.audio_transcript.done)
+  const aiDone = event.type === 'response.output_audio_transcript.done' || event.type === 'response.audio_transcript.done';
+  if (aiDone && event.transcript) {
+    if (box.querySelector('p.text-slate-500')) box.innerHTML = '';
+    const el = document.createElement('p');
+    el.className = 'text-sm mb-2';
+    el.innerHTML = `<span class="text-indigo-400 font-medium">AI:</span> ${escHtml(event.transcript)}`;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // User transcript
+  if (event.type === 'conversation.item.input_audio_transcription.completed' && event.transcript) {
+    if (box.querySelector('p.text-slate-500')) box.innerHTML = '';
+    const el = document.createElement('p');
+    el.className = 'text-sm mb-2';
+    el.innerHTML = `<span class="text-emerald-400 font-medium">You:</span> ${escHtml(event.transcript)}`;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+    candidateIndicator.classList.add('pulse-candidate');
+    setTimeout(() => candidateIndicator.classList.remove('pulse-candidate'), 2000);
+  }
+
+  if (event.type === 'input_audio_buffer.speech_started') {
+    candidateIndicator.classList.add('pulse-candidate');
+  }
+  if (event.type === 'input_audio_buffer.speech_stopped') {
+    candidateIndicator.classList.remove('pulse-candidate');
+  }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── Timer ──────────────────────────────────────────────────────────
+function startTimer() {
+  warningsSent = { twoMin: false, thirtyS: false, timeUp: false };
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    updateTimerDisplay();
+    if (secondsLeft === 120 && !warningsSent.twoMin) {
+      warningsSent.twoMin = true;
+      sendSystemMessage('[System: 2 minutes remaining. Please start wrapping up your current response.]');
+    }
+    if (secondsLeft === 30 && !warningsSent.thirtyS) {
+      warningsSent.thirtyS = true;
+      sendSystemMessage('[System: 30 seconds remaining. Please conclude your current thought.]');
+      document.getElementById('timer-display').classList.replace('text-indigo-400', 'text-red-400');
+    }
+    if (secondsLeft <= 0 && !warningsSent.timeUp) {
+      warningsSent.timeUp = true;
+      clearInterval(timerInterval);
+      sendSystemMessage('[System: Time is up. Please say your farewell to the candidate and end the interview gracefully.]');
+      setTimeout(endInterview, 20000);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(Math.max(0, secondsLeft) / 60).toString().padStart(2, '0');
+  const s = (Math.max(0, secondsLeft) % 60).toString().padStart(2, '0');
+  document.getElementById('timer-display').textContent = `${m}:${s}`;
+}
+
+function sendSystemMessage(text) {
+  if (!dc || dc.readyState !== 'open') return;
+  dc.send(JSON.stringify({
+    type: 'conversation.item.create',
+    item: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] }
+  }));
+  dc.send(JSON.stringify({ type: 'response.create', response: { modalities: ['text', 'audio'] } }));
+}
+
+// ── Mute / End ─────────────────────────────────────────────────────
+document.getElementById('mute-btn').addEventListener('click', () => {
+  muted = !muted;
+  if (localStream) localStream.getAudioTracks().forEach(t => { t.enabled = !muted; });
+  document.getElementById('mute-btn').textContent = muted ? '🔇 Unmute' : '🎤 Mute';
+  document.getElementById('mic-status').textContent = muted ? 'Muted' : 'Microphone active';
+});
+
+document.getElementById('end-btn').addEventListener('click', () => {
+  if (confirm('End the interview now?')) endInterview();
+});
+
+async function endInterview() {
+  clearInterval(timerInterval);
+  if (dc && dc.readyState === 'open') {
+    try { dc.send(JSON.stringify({ type: 'response.cancel' })); } catch (_) {}
+  }
+  if (pc) { try { pc.close(); } catch (_) {} }
+  if (localStream) localStream.getTracks().forEach(t => t.stop());
+
+  show('completed');
+
+  try {
+    await fetch(`${API}/assessment/${uid}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversation_data: transcript })
+    });
+  } catch (e) {
+    console.error('Failed to save transcript', e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

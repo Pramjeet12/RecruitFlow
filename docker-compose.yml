@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: recruitflow-postgres
+    networks:
+      - recruitflow-net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME:-hr_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hr_pass}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-recruitflow}
+    ports:
+      - "5432:5432"
+    volumes:
+      - recruitflow-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-hr_user} -d ${POSTGRES_DATABASE:-recruitflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  recruitflow-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: recruitflow-api
+    networks:
+      - recruitflow-net
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  recruitflow-net:
+    driver: bridge
+
+volumes:
+  recruitflow-postgres-data:

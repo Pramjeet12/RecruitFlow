@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CV Screening — HR Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .progress-bar-fill { transition: width 0.4s ease; }
+    .score-badge-high  { background:#16a34a; }
+    .score-badge-mid   { background:#d97706; }
+    .score-badge-low   { background:#dc2626; }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .spinner {
+      border: 3px solid #e5e7eb;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .dist-bar-fill { transition: width 0.5s ease; }
+    #mail-modal { display:none; }
+    #mail-modal.open { display:flex; }
+    #assessment-modal { display:none; }
+    #assessment-modal.open { display:flex; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 font-sans">
+
+<!-- ─── LOGIN PAGE ─────────────────────────────────────────────── -->
+<div id="page-login" class="flex items-center justify-center min-h-screen">
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md fade-in">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-100 rounded-full mb-3">
+        <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-800">CV Screening</h1>
+      <p class="text-slate-500 text-sm mt-1">HR Automation Tool</p>
+    </div>
+    <div id="login-error" class="hidden bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm mb-4"></div>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input id="login-email" type="email" required placeholder="hr@company.com"
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input id="login-password" type="password" required placeholder="••••••••"
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <button type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition text-sm">
+        Sign In
+      </button>
+    </form>
+    <p class="text-center text-xs text-slate-400 mt-6">
+      No account? <a href="#" id="goto-register" class="text-indigo-500 hover:underline">Register</a>
+    </p>
+  </div>
+</div>
+
+<!-- ─── REGISTER PAGE ──────────────────────────────────────────── -->
+<div id="page-register" class="hidden flex items-center justify-center min-h-screen">
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md fade-in">
+    <h1 class="text-xl font-bold text-slate-800 mb-6">Create Account</h1>
+    <div id="register-error" class="hidden bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm mb-4"></div>
+    <form id="register-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+        <input id="reg-name" type="text" required placeholder="Jane Smith"
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <input id="reg-email" type="email" required placeholder="hr@company.com"
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input id="reg-password" type="password" required placeholder="••••••••"
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <button type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition text-sm">
+        Register
+      </button>
+    </form>
+    <p class="text-center text-xs text-slate-400 mt-4">
+      <a href="#" id="goto-login" class="text-indigo-500 hover:underline">Back to login</a>
+    </p>
+  </div>
+</div>
+
+<!-- ─── SCREENING FORM PAGE ────────────────────────────────────── -->
+<div id="page-form" class="hidden min-h-screen flex items-start justify-center py-12 px-4">
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-2xl fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">New Screening Job</h1>
+        <p class="text-slate-500 text-sm mt-0.5">Paste the Drive folder link and describe the role</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="history-btn-form"
+                class="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition">
+          History
+        </button>
+        <button id="logout-btn"
+                class="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:border-red-300 hover:text-red-500 transition">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <div id="form-error" class="hidden bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm mb-4"></div>
+
+    <form id="screening-form" class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">
+          Google Drive Folder Link
+          <span class="text-slate-400 font-normal">(must be publicly accessible)</span>
+        </label>
+        <input id="drive-link" type="url" required
+               placeholder="https://drive.google.com/drive/folders/..."
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        <p id="drive-link-error" class="hidden text-xs text-red-500 mt-1"></p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Number of Top CVs to Select</label>
+        <select id="top-k"
+                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+          <option value="5">Top 5</option>
+          <option value="10" selected>Top 10</option>
+          <option value="15">Top 15</option>
+          <option value="20">Top 20</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Job Description</label>
+        <textarea id="job-description" required rows="8"
+                  placeholder="Paste the full job description here. Include required skills, experience, responsibilities..."
+                  class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+        <p class="text-xs text-slate-400 mt-1" id="jd-char-count">0 characters</p>
+      </div>
+
+      <button type="submit" id="start-btn" disabled
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        Start Screening
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ─── PROGRESS PAGE ─────────────────────────────────────────── -->
+<div id="page-progress" class="hidden min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg text-center fade-in">
+    <div class="spinner mx-auto mb-4"></div>
+    <h2 class="text-xl font-bold text-slate-800 mb-1" id="progress-title">Scanning Drive folder…</h2>
+    <p class="text-slate-500 text-sm" id="progress-subtitle">Connecting to Google Drive</p>
+
+    <div id="progress-bar-wrap" class="hidden mt-6">
+      <div class="flex justify-between text-xs text-slate-500 mb-1">
+        <span id="progress-count">0 / 0 CVs processed</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+        <div id="progress-bar-fill"
+             class="h-3 bg-indigo-500 rounded-full progress-bar-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="progress-error" class="hidden bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm mt-4"></div>
+
+    <button id="btn-cancel-job"
+            class="mt-6 px-5 py-2 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 hover:border-red-300 hover:text-red-600 transition">
+      Cancel Job
+    </button>
+  </div>
+</div>
+
+<!-- ─── RESULTS PAGE ──────────────────────────────────────────── -->
+<div id="page-results" class="hidden min-h-screen py-10 px-4">
+  <div class="max-w-3xl mx-auto fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Top Candidates</h1>
+        <p class="text-slate-500 text-sm mt-0.5" id="results-subtitle"></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="history-btn-results"
+                class="text-sm font-medium px-3 py-2 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition">
+          History
+        </button>
+        <button id="new-screening-btn"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+          New Screening
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── Score Overview (above results) ──────────────────────── -->
+    <div id="results-dashboard" class="hidden mb-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 fade-in">
+      <h2 class="text-base font-semibold text-slate-800 mb-4">Score Overview</h2>
+      <div class="flex flex-col sm:flex-row gap-6">
+
+        <!-- Pie chart -->
+        <div class="flex flex-col items-center gap-3 flex-shrink-0">
+          <canvas id="score-pie" width="160" height="160"></canvas>
+          <div id="pie-legend" class="flex flex-wrap justify-center gap-x-3 gap-y-1 max-w-[180px]"></div>
+        </div>
+
+        <!-- Stats + distribution -->
+        <div class="flex-1 min-w-0">
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+              <p class="text-2xl font-bold text-slate-800" id="dash-total">—</p>
+              <p class="text-xs text-slate-500 mt-0.5">Total Scored</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+              <p class="text-2xl font-bold text-indigo-600" id="dash-avg">—</p>
+              <p class="text-xs text-slate-500 mt-0.5">Avg Score</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+              <p class="text-2xl font-bold text-green-600" id="dash-top">—</p>
+              <p class="text-xs text-slate-500 mt-0.5">Top Score</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+              <p class="text-2xl font-bold text-amber-600" id="dash-pass">—</p>
+              <p class="text-xs text-slate-500 mt-0.5">Pass Rate ≥7</p>
+            </div>
+          </div>
+
+          <!-- Distribution bars -->
+          <div id="dash-distribution" class="space-y-1.5"></div>
+          <p id="dash-failed" class="text-xs text-slate-400 mt-3"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate results -->
+    <div id="results-list" class="space-y-4"></div>
+
+    <!-- Floating send-mail bar (visible when checkboxes checked) -->
+    <div id="send-mail-bar"
+         class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-5 py-3 rounded-full shadow-xl flex items-center gap-3 z-50 fade-in">
+      <span id="send-mail-count" class="text-sm font-medium"></span>
+      <button id="open-mail-modal-btn"
+              class="bg-white text-indigo-700 text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-indigo-50 transition">
+        Send Mail
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── HISTORY PAGE ──────────────────────────────────────────── -->
+<div id="page-history" class="hidden min-h-screen py-10 px-4">
+  <div class="max-w-3xl mx-auto fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Screening History</h1>
+        <p class="text-slate-500 text-sm mt-0.5">All past screening jobs</p>
+      </div>
+      <button id="new-screening-btn-history"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+        New Screening
+      </button>
+    </div>
+    <div id="history-list" class="space-y-3"></div>
+  </div>
+</div>
+
+<!-- ─── ASSESSMENT DETAIL MODAL ───────────────────────────────── -->
+<div id="assessment-modal"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center z-50 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 fade-in max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800" id="am-title">Assessment Details</h2>
+        <p class="text-xs text-slate-400" id="am-candidate"></p>
+      </div>
+      <button id="close-assessment-modal-btn" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <!-- Score + Fit -->
+    <div class="flex items-center gap-3 mb-4">
+      <div id="am-score-badge" class="text-white font-bold text-lg px-4 py-2 rounded-xl">—</div>
+      <div id="am-fit-badge" class="text-sm font-semibold px-3 py-1.5 rounded-full">—</div>
+      <div id="am-status-badge" class="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600 ml-auto"></div>
+    </div>
+    <!-- Summary -->
+    <div id="am-summary-section" class="hidden mb-4">
+      <p class="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Summary</p>
+      <p id="am-summary" class="text-sm text-slate-700 bg-slate-50 rounded-lg p-3"></p>
+    </div>
+    <!-- Strengths / Concerns -->
+    <div id="am-details-section" class="hidden grid grid-cols-2 gap-3 mb-4">
+      <div>
+        <p class="text-xs font-semibold text-emerald-600 mb-1 uppercase tracking-wide">Strengths</p>
+        <ul id="am-strengths" class="space-y-1 text-sm text-slate-700"></ul>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-red-500 mb-1 uppercase tracking-wide">Concerns</p>
+        <ul id="am-concerns" class="space-y-1 text-sm text-slate-700"></ul>
+      </div>
+    </div>
+    <!-- Topics -->
+    <div id="am-topics-section" class="hidden">
+      <p class="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Topics Covered</p>
+      <div id="am-topics" class="flex flex-wrap gap-2"></div>
+    </div>
+    <!-- Pending state -->
+    <div id="am-pending-msg" class="hidden text-center py-6 text-slate-500 text-sm">
+      <div class="text-3xl mb-3">⏳</div>
+      Assessment in progress or pending — check back later for results.
+    </div>
+  </div>
+</div>
+
+<!-- ─── SEND MAIL MODAL ───────────────────────────────────────── -->
+<div id="mail-modal"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center z-50 px-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 fade-in">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-bold text-slate-800">Send Shortlist Email</h2>
+      <button id="close-mail-modal-btn" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <div id="mail-modal-error" class="hidden bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm mb-4"></div>
+    <div id="mail-modal-success" class="hidden bg-green-50 text-green-700 rounded-lg px-4 py-3 text-sm mb-4"></div>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+        <input id="mail-subject" type="text"
+               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Assessment Name</label>
+          <input id="mail-assessment-name" type="text" placeholder="e.g. Technical Round 1"
+                 class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div class="w-36">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Time Limit (min)</label>
+          <input id="mail-duration" type="number" min="1" value="20" placeholder="e.g. 15"
+                 class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Message</label>
+        <textarea id="mail-body" rows="6"
+                  class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"></textarea>
+        <p class="text-xs text-slate-400 mt-1">The assessment link will be automatically added below your message.</p>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button id="cancel-mail-btn"
+              class="px-4 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">
+        Cancel
+      </button>
+      <button id="send-mail-btn"
+              class="px-5 py-2 text-sm font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Send
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────
+const state = {
+  token: localStorage.getItem('jwt') || null,
+  currentJobId: null,
+  currentJobData: null,
+  sse: null,
+  checkedCvIds: new Set(),
+};
+
+const DRIVE_FOLDER_RE = /https:\/\/drive\.google\.com\/drive(?:\/u\/\d+)?\/folders\/([a-zA-Z0-9_-]+)/;
+
+const DEFAULT_MAIL_SUBJECT = "You've been shortlisted!";
+const DEFAULT_MAIL_BODY =
+`We reviewed your CV and are pleased to inform you that you have been shortlisted for the next round.
+
+Please complete the assessment at your earliest convenience. The link and time limit are included below.
+
+Looking forward to your response.`;
+
+// ─── Helpers ──────────────────────────────────────────────────────
+function jobName(job) {
+  const firstLine = (job.job_description || '').split('\n')[0].trim();
+  const s = firstLine.length > 55 ? firstLine.slice(0, 55).replace(/\s\S*$/, '') + '…' : firstLine;
+  return s || `Screening #${job.id}`;
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ─── Page routing ─────────────────────────────────────────────────
+function show(pageId) {
+  ['login','register','form','progress','results','history'].forEach(p => {
+    const el = document.getElementById(`page-${p}`);
+    if (el) el.classList.add('hidden');
+  });
+  const target = document.getElementById(`page-${pageId}`);
+  if (target) target.classList.remove('hidden');
+  if (pageId === 'form') checkFormValid();
+}
+
+function checkFormValid() {
+  const link = document.getElementById('drive-link').value.trim();
+  const jd   = document.getElementById('job-description').value.trim();
+  const topk = parseInt(document.getElementById('top-k').value);
+  const ok = DRIVE_FOLDER_RE.test(link) && jd.length >= 20 && topk > 0;
+  document.getElementById('start-btn').disabled = !ok;
+}
+
+function init() {
+  if (state.token) show('form');
+  else show('login');
+}
+
+// ─── Auth ──────────────────────────────────────────────────────────
+document.getElementById('goto-register').addEventListener('click', e => { e.preventDefault(); show('register'); });
+document.getElementById('goto-login').addEventListener('click', e => { e.preventDefault(); show('login'); });
+document.getElementById('logout-btn').addEventListener('click', () => {
+  state.token = null;
+  localStorage.removeItem('jwt');
+  show('login');
+});
+
+document.getElementById('login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  clearError('login-error');
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  try {
+    const res = await apiFetch('/auth/login', 'POST', { email, password }, false);
+    state.token = res.access_token;
+    localStorage.setItem('jwt', state.token);
+    show('form');
+  } catch (err) {
+    showError('login-error', err.message);
+  }
+});
+
+document.getElementById('register-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  clearError('register-error');
+  const full_name = document.getElementById('reg-name').value;
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  try {
+    await apiFetch('/api/v1/users', 'POST', { email, full_name, password }, false);
+    const res = await apiFetch('/auth/login', 'POST', { email, password }, false);
+    state.token = res.access_token;
+    localStorage.setItem('jwt', state.token);
+    show('form');
+  } catch (err) {
+    showError('register-error', err.message);
+  }
+});
+
+// ─── Character counter ────────────────────────────────────────────
+document.getElementById('job-description').addEventListener('input', e => {
+  document.getElementById('jd-char-count').textContent = `${e.target.value.length} characters`;
+  checkFormValid();
+});
+document.getElementById('drive-link').addEventListener('input', checkFormValid);
+document.getElementById('top-k').addEventListener('change', checkFormValid);
+
+// ─── Drive link validation ────────────────────────────────────────
+document.getElementById('drive-link').addEventListener('blur', e => {
+  const val = e.target.value.trim();
+  const errEl = document.getElementById('drive-link-error');
+  if (val && !DRIVE_FOLDER_RE.test(val)) {
+    errEl.textContent = 'Must be a valid Google Drive folder URL';
+    errEl.classList.remove('hidden');
+  } else {
+    errEl.classList.add('hidden');
+  }
+});
+
+// ─── Screening form submit ────────────────────────────────────────
+document.getElementById('screening-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  clearError('form-error');
+
+  const drive_link = document.getElementById('drive-link').value.trim();
+  const top_k = parseInt(document.getElementById('top-k').value);
+  const job_description = document.getElementById('job-description').value.trim();
+
+  if (!DRIVE_FOLDER_RE.test(drive_link)) {
+    showError('form-error', 'Please enter a valid Google Drive folder link.');
+    return;
+  }
+  if (job_description.length < 20) {
+    showError('form-error', 'Job description must be at least 20 characters.');
+    return;
+  }
+
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+  btn.textContent = 'Starting…';
+
+  try {
+    const job = await apiFetch('/api/v1/screening-jobs', 'POST', { drive_link, top_k, job_description });
+    state.currentJobId = job.id;
+    state.currentJobData = job;
+    startProgressTracking(job.id);
+    show('progress');
+  } catch (err) {
+    showError('form-error', err.message);
+    btn.disabled = false;
+    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Start Screening`;
+  }
+});
+
+// ─── Cancel job ──────────────────────────────────────────────────
+document.getElementById('btn-cancel-job').addEventListener('click', async () => {
+  if (!state.currentJobId) return;
+  const btn = document.getElementById('btn-cancel-job');
+  btn.disabled = true;
+  btn.textContent = 'Cancelling…';
+  try {
+    await apiFetch(`/api/v1/screening-jobs/${state.currentJobId}/cancel`, 'POST');
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Cancel Job';
+    document.getElementById('progress-error').textContent = err.message;
+    document.getElementById('progress-error').classList.remove('hidden');
+  }
+});
+
+// ─── SSE progress tracking ────────────────────────────────────────
+function startProgressTracking(jobId) {
+  document.getElementById('progress-title').textContent = 'Scanning Drive folder…';
+  document.getElementById('progress-subtitle').textContent = 'Downloading CVs';
+  document.getElementById('progress-bar-wrap').classList.add('hidden');
+  document.getElementById('progress-error').classList.add('hidden');
+  document.getElementById('btn-cancel-job').classList.remove('hidden');
+  document.getElementById('btn-cancel-job').disabled = false;
+  document.getElementById('btn-cancel-job').textContent = 'Cancel Job';
+
+  if (state.sse) state.sse.close();
+
+  const sseUrl = `/api/v1/screening-jobs/${jobId}/events?token=${encodeURIComponent(state.token)}`;
+  const es = new EventSource(sseUrl);
+  state.sse = es;
+
+  es.onmessage = function(evt) {
+    let data;
+    try { data = JSON.parse(evt.data); } catch { return; }
+
+    if (data.error) {
+      es.close();
+      document.getElementById('progress-error').textContent = data.error;
+      document.getElementById('progress-error').classList.remove('hidden');
+      return;
+    }
+
+    const { status, total_cvs, processed_cvs } = data;
+
+    if (status === 'pending' || total_cvs === 0) {
+      document.getElementById('progress-title').textContent = 'Scanning Drive folder…';
+      document.getElementById('progress-subtitle').textContent = 'Counting CVs in your folder';
+    } else {
+      document.getElementById('progress-title').textContent = `Processing ${total_cvs} CVs`;
+      document.getElementById('progress-subtitle').textContent = `AI is analyzing each candidate`;
+    }
+
+    if (total_cvs > 0) {
+      document.getElementById('progress-bar-wrap').classList.remove('hidden');
+      const pct = Math.round((processed_cvs / total_cvs) * 100);
+      document.getElementById('progress-count').textContent = `${processed_cvs} / ${total_cvs} CVs processed`;
+      document.getElementById('progress-pct').textContent = `${pct}%`;
+      document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+    }
+
+    if (status === 'completed') {
+      es.close();
+      document.getElementById('btn-cancel-job').classList.add('hidden');
+      setTimeout(() => loadResults(jobId), 500);
+    } else if (status === 'failed') {
+      es.close();
+      document.getElementById('btn-cancel-job').classList.add('hidden');
+      const msg = data.error_message || 'Processing failed';
+      document.getElementById('progress-error').textContent = msg;
+      document.getElementById('progress-error').classList.remove('hidden');
+    } else if (status === 'cancelled') {
+      es.close();
+      document.getElementById('btn-cancel-job').classList.add('hidden');
+      document.getElementById('progress-title').textContent = 'Job Cancelled';
+      document.getElementById('progress-subtitle').textContent = 'The screening job was cancelled.';
+    }
+  };
+
+  es.onerror = function() {
+    es.close();
+    document.getElementById('progress-error').textContent = 'Lost connection to server. Refresh to check status.';
+    document.getElementById('progress-error').classList.remove('hidden');
+  };
+}
+
+// ─── Load & render results ────────────────────────────────────────
+async function loadResults(jobId) {
+  try {
+    const [data, assessmentsData] = await Promise.all([
+      apiFetch(`/api/v1/screening-jobs/${jobId}/results`),
+      apiFetch(`/api/v1/screening-jobs/${jobId}/assessments`).catch(() => ({ assessments: [] })),
+    ]);
+    state.checkedCvIds.clear();
+    updateSendMailBar();
+    // Build map: cv_result_id → assessment
+    const assessmentMap = {};
+    (assessmentsData.assessments || []).forEach(a => { assessmentMap[a.cv_result_id] = a; });
+    renderResults(data, assessmentMap);
+    show('results');
+    loadStats(jobId);
+  } catch (err) {
+    document.getElementById('progress-error').textContent = err.message;
+    document.getElementById('progress-error').classList.remove('hidden');
+  }
+}
+
+function renderResults(data, assessmentMap = {}) {
+  const { results, top_k, job_id } = data;
+
+  const name = state.currentJobData ? jobName(state.currentJobData) : `Screening #${job_id}`;
+  document.getElementById('results-subtitle').textContent =
+    `${name} · Top ${results.length} of ${top_k} requested`;
+
+  document.getElementById('results-dashboard').classList.add('hidden');
+
+  const list = document.getElementById('results-list');
+  list.innerHTML = '';
+
+  if (!results.length) {
+    list.innerHTML = '<div class="text-center text-slate-500 py-12">No scored CVs found.</div>';
+    return;
+  }
+
+  results.forEach((cv, idx) => {
+    const score = cv.score ?? 0;
+    let badgeClass = 'score-badge-low';
+    if (score >= 7) badgeClass = 'score-badge-high';
+    else if (score >= 4) badgeClass = 'score-badge-mid';
+
+    const previewUrl = cv.drive_preview_link ||
+      (cv.drive_file_id ? `https://drive.google.com/file/d/${cv.drive_file_id}/view` : null);
+
+    const emailChip = cv.candidate_email
+      ? `<span class="text-xs text-slate-400 italic">${escHtml(cv.candidate_email)}</span>`
+      : `<span class="text-xs text-slate-300 italic">no email found</span>`;
+
+    const assessment = assessmentMap[cv.id];
+    let assessmentBadge = '<span class="text-xs text-slate-300 italic">No assessment sent</span>';
+    let assessmentBtn = '';
+    if (assessment) {
+      const statusStyles = {
+        pending:   'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        started:   'bg-blue-50 text-blue-700 border border-blue-200',
+        completed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      };
+      const statusLabels = { pending: '⏳ Assessment Pending', started: '🎙️ In Progress', completed: '✅ Assessment Done' };
+      const cls = statusStyles[assessment.status] || 'bg-slate-100 text-slate-600';
+      assessmentBadge = `<span class="text-xs font-medium px-2 py-0.5 rounded-full ${cls}">${statusLabels[assessment.status] || assessment.status}</span>`;
+      if (assessment.status === 'completed') {
+        assessmentBtn = `<button class="assessment-detail-btn text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition font-medium"
+                                 data-assessment='${escHtml(JSON.stringify(assessment))}'>Details</button>`;
+      }
+    }
+
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl shadow-sm border border-slate-100 p-5 fade-in';
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <label class="flex flex-col items-center gap-0.5 flex-shrink-0 cursor-pointer" title="Select to send email">
+            <input type="checkbox" data-cv-id="${cv.id}"
+                   class="cv-checkbox w-4 h-4 rounded border-slate-300 accent-indigo-600 cursor-pointer" />
+            <span class="text-[10px] text-slate-400 select-none leading-none">Email</span>
+          </label>
+          <span class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-50 text-indigo-700 text-sm font-bold flex items-center justify-center">#${idx + 1}</span>
+          <div class="min-w-0">
+            <h3 class="font-semibold text-slate-800 truncate" title="${escHtml(cv.filename)}">${escHtml(cv.filename)}</h3>
+            <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+              <p class="text-xs text-slate-400">${cv.status}</p>
+              ${emailChip}
+              ${assessmentBadge}
+              ${assessmentBtn}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <span class="${badgeClass} text-white text-sm font-bold px-3 py-1 rounded-full">
+            ${score.toFixed(1)} / 10
+          </span>
+          ${previewUrl
+            ? `<a href="${escHtml(previewUrl)}" target="_blank" rel="noopener noreferrer"
+                 class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition font-medium">
+                 View CV ↗
+               </a>`
+            : ''
+          }
+        </div>
+      </div>
+
+      ${cv.cv_data ? `
+      <div class="mt-3 bg-slate-50 rounded-lg p-3">
+        <p class="text-xs font-semibold text-slate-600 mb-1">CANDIDATE SUMMARY</p>
+        <p class="text-sm text-slate-700">${escHtml(cv.cv_data)}</p>
+      </div>` : ''}
+
+      ${cv.reason ? `
+      <div class="mt-2">
+        <p class="text-xs font-semibold text-slate-500 mb-1">SCORING REASON</p>
+        <p class="text-sm text-slate-600">${escHtml(cv.reason)}</p>
+      </div>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  // Checkbox listeners
+  list.querySelectorAll('.cv-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = parseInt(cb.dataset.cvId);
+      if (cb.checked) state.checkedCvIds.add(id);
+      else state.checkedCvIds.delete(id);
+      updateSendMailBar();
+    });
+  });
+
+  // Assessment detail button listeners
+  list.querySelectorAll('.assessment-detail-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const assessment = JSON.parse(btn.dataset.assessment);
+      openAssessmentModal(assessment);
+    });
+  });
+}
+
+// ─── Send-mail bar ────────────────────────────────────────────────
+function updateSendMailBar() {
+  const bar = document.getElementById('send-mail-bar');
+  const n = state.checkedCvIds.size;
+  if (n === 0) {
+    bar.classList.add('hidden');
+  } else {
+    document.getElementById('send-mail-count').textContent =
+      `${n} candidate${n > 1 ? 's' : ''} selected`;
+    bar.classList.remove('hidden');
+  }
+}
+
+// ─── Mail modal ───────────────────────────────────────────────────
+document.getElementById('open-mail-modal-btn').addEventListener('click', () => {
+  document.getElementById('mail-subject').value = DEFAULT_MAIL_SUBJECT;
+  document.getElementById('mail-body').value = DEFAULT_MAIL_BODY;
+  document.getElementById('mail-assessment-name').value = 'Technical Assessment';
+  document.getElementById('mail-duration').value = '20';
+  clearError('mail-modal-error');
+  document.getElementById('mail-modal-success').classList.add('hidden');
+  document.getElementById('mail-modal').classList.add('open');
+});
+
+function closeMailModal() {
+  document.getElementById('mail-modal').classList.remove('open');
+}
+document.getElementById('close-mail-modal-btn').addEventListener('click', closeMailModal);
+document.getElementById('cancel-mail-btn').addEventListener('click', closeMailModal);
+
+document.getElementById('send-mail-btn').addEventListener('click', async () => {
+  const subject = document.getElementById('mail-subject').value.trim();
+  const body = document.getElementById('mail-body').value.trim();
+  if (!subject || !body) {
+    showError('mail-modal-error', 'Subject and message are required.');
+    return;
+  }
+
+  const btn = document.getElementById('send-mail-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  clearError('mail-modal-error');
+
+  try {
+    const assessmentName = document.getElementById('mail-assessment-name').value.trim() || 'Technical Assessment';
+    const durationMinutes = parseInt(document.getElementById('mail-duration').value) || 20;
+    const res = await apiFetch(
+      `/api/v1/screening-jobs/${state.currentJobId}/send-mail`,
+      'POST',
+      {
+        cv_result_ids: [...state.checkedCvIds],
+        subject,
+        body,
+        assessment_name: assessmentName,
+        duration_minutes: durationMinutes,
+        base_url: window.location.origin,
+      }
+    );
+    const successEl = document.getElementById('mail-modal-success');
+    const failDetails = res.results.filter(r => !r.sent).map(r => r.error || 'unknown error').join('; ');
+    successEl.textContent = `Sent ${res.sent} of ${res.total} emails.${res.failed > 0 ? ` ${res.failed} failed: ${failDetails}` : ''}`;
+    successEl.classList.remove('hidden');
+    // Uncheck all after send
+    state.checkedCvIds.clear();
+    document.querySelectorAll('.cv-checkbox').forEach(cb => { cb.checked = false; });
+    updateSendMailBar();
+  } catch (err) {
+    showError('mail-modal-error', err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+    </svg> Send`;
+  }
+});
+
+// ─── Assessment detail modal ──────────────────────────────────────
+document.getElementById('close-assessment-modal-btn').addEventListener('click', () => {
+  document.getElementById('assessment-modal').classList.remove('open');
+});
+document.getElementById('assessment-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('assessment-modal'))
+    document.getElementById('assessment-modal').classList.remove('open');
+});
+
+function openAssessmentModal(a) {
+  document.getElementById('am-title').textContent = a.assessment_name || 'Assessment';
+  document.getElementById('am-candidate').textContent = a.candidate_name || '';
+
+  const scoreEl = document.getElementById('am-score-badge');
+  const fitEl = document.getElementById('am-fit-badge');
+  const statusEl = document.getElementById('am-status-badge');
+  const summarySection = document.getElementById('am-summary-section');
+  const detailsSection = document.getElementById('am-details-section');
+  const topicsSection = document.getElementById('am-topics-section');
+  const pendingMsg = document.getElementById('am-pending-msg');
+
+  // Reset
+  summarySection.classList.add('hidden');
+  detailsSection.classList.add('hidden');
+  topicsSection.classList.add('hidden');
+  pendingMsg.classList.add('hidden');
+
+  statusEl.textContent = a.status;
+  const statusCls = { pending: 'bg-yellow-100 text-yellow-700', started: 'bg-blue-100 text-blue-700', completed: 'bg-emerald-100 text-emerald-700' };
+  statusEl.className = `text-xs font-medium px-2 py-1 rounded-full ml-auto ${statusCls[a.status] || 'bg-slate-100 text-slate-600'}`;
+
+  if (a.score != null) {
+    scoreEl.textContent = `${a.score.toFixed(1)} / 10`;
+    scoreEl.className = `text-white font-bold text-lg px-4 py-2 rounded-xl ${a.score >= 7 ? 'bg-emerald-600' : a.score >= 4 ? 'bg-amber-500' : 'bg-red-500'}`;
+  } else {
+    scoreEl.textContent = '— / 10';
+    scoreEl.className = 'bg-slate-300 text-slate-600 font-bold text-lg px-4 py-2 rounded-xl';
+  }
+
+  if (a.fit_recommendation) {
+    const fitStyles = { yes: 'bg-emerald-100 text-emerald-700', no: 'bg-red-100 text-red-700', maybe: 'bg-amber-100 text-amber-700' };
+    const fitLabels = { yes: '✓ Recommended', no: '✗ Not Recommended', maybe: '~ Borderline' };
+    fitEl.textContent = fitLabels[a.fit_recommendation] || a.fit_recommendation;
+    fitEl.className = `text-sm font-semibold px-3 py-1.5 rounded-full ${fitStyles[a.fit_recommendation] || 'bg-slate-100 text-slate-600'}`;
+  } else {
+    fitEl.textContent = '';
+  }
+
+  if (a.summary) {
+    document.getElementById('am-summary').textContent = a.summary;
+    summarySection.classList.remove('hidden');
+  }
+
+  const sr = a.structured_result;
+  if (sr) {
+    if (sr.strengths?.length || sr.concerns?.length) {
+      const strEl = document.getElementById('am-strengths');
+      const conEl = document.getElementById('am-concerns');
+      strEl.innerHTML = (sr.strengths || []).map(s => `<li class="flex gap-1"><span class="text-emerald-500 flex-shrink-0">•</span>${escHtml(s)}</li>`).join('');
+      conEl.innerHTML = (sr.concerns || []).map(s => `<li class="flex gap-1"><span class="text-red-400 flex-shrink-0">•</span>${escHtml(s)}</li>`).join('');
+      detailsSection.classList.remove('hidden');
+    }
+    if (sr.key_topics_covered?.length) {
+      document.getElementById('am-topics').innerHTML =
+        sr.key_topics_covered.map(t => `<span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-1 rounded-full">${escHtml(t)}</span>`).join('');
+      topicsSection.classList.remove('hidden');
+    }
+  }
+
+  if (a.status !== 'completed' || !a.summary) {
+    pendingMsg.classList.remove('hidden');
+  }
+
+  document.getElementById('assessment-modal').classList.add('open');
+}
+
+// ─── Score dashboard ──────────────────────────────────────────────
+const PIE_COLORS = ['#f87171','#fb923c','#facc15','#86efac','#4ade80'];
+const PIE_LABELS = ['0–2','2–4','4–6','6–8','8–10'];
+
+async function loadStats(jobId) {
+  try {
+    const stats = await apiFetch(`/api/v1/screening-jobs/${jobId}/stats`);
+    renderDashboard(stats);
+  } catch { /* non-critical */ }
+}
+
+function renderDashboard(stats) {
+  if (!stats || stats.total_scored === 0) return;
+
+  document.getElementById('dash-total').textContent = stats.total_scored;
+  document.getElementById('dash-avg').textContent = stats.avg_score != null ? stats.avg_score.toFixed(1) : '—';
+  document.getElementById('dash-top').textContent = stats.top_score != null ? stats.top_score.toFixed(1) : '—';
+  document.getElementById('dash-pass').textContent = stats.pass_rate != null ? `${stats.pass_rate}%` : '—';
+  if (stats.total_failed > 0)
+    document.getElementById('dash-failed').textContent =
+      `${stats.total_failed} CV${stats.total_failed > 1 ? 's' : ''} failed to process`;
+
+  // Distribution bars
+  const distEl = document.getElementById('dash-distribution');
+  distEl.innerHTML = '';
+  stats.distribution.forEach((bucket, i) => {
+    const barW = Math.max(bucket.pct, bucket.count > 0 ? 3 : 0);
+    distEl.innerHTML += `
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-500 w-8 text-right flex-shrink-0">${escHtml(bucket.label)}</span>
+        <div class="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
+          <div class="h-3 rounded-full dist-bar-fill" style="width:${barW}%;background:${PIE_COLORS[i]}"></div>
+        </div>
+        <span class="text-xs text-slate-600 w-20 flex-shrink-0">${bucket.count} (${bucket.pct}%)</span>
+      </div>`;
+  });
+
+  // Pie chart
+  drawPie(stats.distribution);
+
+  // Legend
+  const legendEl = document.getElementById('pie-legend');
+  legendEl.innerHTML = '';
+  stats.distribution.forEach((b, i) => {
+    if (b.count === 0) return;
+    legendEl.innerHTML += `
+      <div class="flex items-center gap-1">
+        <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" style="background:${PIE_COLORS[i]}"></span>
+        <span class="text-xs text-slate-600">${b.label}</span>
+      </div>`;
+  });
+
+  document.getElementById('results-dashboard').classList.remove('hidden');
+}
+
+function drawPie(distribution) {
+  const canvas = document.getElementById('score-pie');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const total = distribution.reduce((s, b) => s + b.count, 0);
+  if (total === 0) return;
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const r = Math.min(cx, cy) - 8;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let startAngle = -Math.PI / 2;
+
+  distribution.forEach((b, i) => {
+    if (b.count === 0) return;
+    const slice = (b.count / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, startAngle + slice);
+    ctx.closePath();
+    ctx.fillStyle = PIE_COLORS[i];
+    ctx.fill();
+    // thin white separator
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    startAngle += slice;
+  });
+
+  // Donut hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.45, 0, 2 * Math.PI);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  // Center label
+  ctx.fillStyle = '#334155';
+  ctx.font = 'bold 18px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(total, cx, cy);
+}
+
+// ─── History ──────────────────────────────────────────────────────
+async function loadHistory() {
+  show('history');
+  const listEl = document.getElementById('history-list');
+  listEl.innerHTML = '<div class="flex justify-center py-12"><div class="spinner"></div></div>';
+  try {
+    const data = await apiFetch('/api/v1/screening-jobs');
+    renderHistory(data.jobs || []);
+  } catch (err) {
+    listEl.innerHTML = `<div class="bg-red-50 text-red-700 rounded-lg px-4 py-3 text-sm">${escHtml(err.message)}</div>`;
+  }
+}
+
+function renderHistory(jobs) {
+  const listEl = document.getElementById('history-list');
+  if (!jobs.length) {
+    listEl.innerHTML = '<div class="text-center text-slate-500 py-12">No screening jobs yet.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  const statusColors = {
+    completed:  'bg-green-100 text-green-700',
+    processing: 'bg-indigo-100 text-indigo-700',
+    pending:    'bg-slate-100 text-slate-600',
+    failed:     'bg-red-100 text-red-700',
+    cancelled:  'bg-slate-100 text-slate-500',
+  };
+  const jobMap = {};
+  jobs.forEach(j => { jobMap[j.id] = j; });
+
+  jobs.forEach(job => {
+    const badge = statusColors[job.status] || 'bg-slate-100 text-slate-600';
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center justify-between gap-4 fade-in';
+    card.innerHTML = `
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <h3 class="font-semibold text-slate-800 truncate">${escHtml(jobName(job))}</h3>
+          <span class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${badge}">${job.status}</span>
+        </div>
+        <p class="text-xs text-slate-400">${fmtDate(job.created_at)} · ${job.total_cvs} CVs · Top ${job.top_k}</p>
+      </div>
+      <div class="flex-shrink-0">
+        ${job.status === 'completed'
+          ? `<button class="history-view-btn bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition"
+                    data-job-id="${job.id}">View Results</button>`
+          : job.status === 'processing'
+          ? `<button class="history-reconnect-btn border border-slate-200 text-slate-600 text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50 transition"
+                    data-job-id="${job.id}">Reconnect</button>`
+          : ''
+        }
+      </div>`;
+    listEl.appendChild(card);
+  });
+
+  listEl.querySelectorAll('.history-view-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const jobId = parseInt(btn.dataset.jobId);
+      state.currentJobId = jobId;
+      state.currentJobData = jobMap[jobId] || null;
+      await loadResults(jobId);
+    });
+  });
+
+  listEl.querySelectorAll('.history-reconnect-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const jobId = parseInt(btn.dataset.jobId);
+      state.currentJobId = jobId;
+      state.currentJobData = jobMap[jobId] || null;
+      startProgressTracking(jobId);
+      show('progress');
+    });
+  });
+}
+
+// ─── Navigation ───────────────────────────────────────────────────
+document.getElementById('history-btn-form').addEventListener('click', loadHistory);
+document.getElementById('history-btn-results').addEventListener('click', loadHistory);
+
+document.getElementById('new-screening-btn-history').addEventListener('click', () => {
+  state.currentJobId = null;
+  state.currentJobData = null;
+  resetForm();
+  show('form');
+});
+
+document.getElementById('new-screening-btn').addEventListener('click', () => {
+  if (state.sse) { state.sse.close(); state.sse = null; }
+  state.currentJobId = null;
+  state.currentJobData = null;
+  resetForm();
+  show('form');
+});
+
+function resetForm() {
+  document.getElementById('start-btn').disabled = false;
+  document.getElementById('start-btn').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    Start Screening`;
+  document.getElementById('screening-form').reset();
+  document.getElementById('jd-char-count').textContent = '0 characters';
+  clearError('form-error');
+}
+
+// ─── API helper ───────────────────────────────────────────────────
+async function apiFetch(path, method = 'GET', body = null, withAuth = true) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (withAuth && state.token) headers['Authorization'] = `Bearer ${state.token}`;
+
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(path, opts);
+  const json = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const msg = json.message || json.detail || `Error ${res.status}`;
+    if (res.status === 401) {
+      state.token = null;
+      localStorage.removeItem('jwt');
+      show('login');
+    }
+    throw new Error(msg);
+  }
+  return json;
+}
+
+function showError(elId, msg) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function clearError(elId) {
+  const el = document.getElementById(elId);
+  el.textContent = '';
+  el.classList.add('hidden');
+}
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+import os
+import sys
+from logging.config import fileConfig
+
+from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+# put backend/ on sys.path so imports work
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+from config.settings import get_settings
+
+# import ALL models so Alembic can see their metadata
+from database.manager import Base
+import user.db_models  # noqa: F401
+import screening_job.db_models  # noqa: F401
+import cv_result.db_models  # noqa: F401
+import assessment.db_models  # noqa: F401
+
+config = context.config
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+settings = get_settings()
+config.set_main_option("sqlalchemy.url", settings.database_migration_url)
+
+target_metadata = Base.metadata
+
+
+def run_migrations_offline() -> None:
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

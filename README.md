@@ -1,10 +1,48 @@
-# CV Screening Automation
+# RecruitFlow
 
-An HR automation tool that eliminates manual resume review. HR pastes a Google Drive folder link (containing CVs), selects how many top candidates to shortlist, and writes a job description. The system downloads every PDF, extracts text and external links, fetches link content asynchronously, scores each CV with GPT-4o, and streams live progress back to the browser — finishing with a ranked list of top-k candidates with direct Drive preview links.
+![RecruitFlow Banner](docs/images/RecruitFlow.png)
 
-After shortlisting, HR can send personalised assessment emails. Each candidate gets a unique link where they upload their CV and do a live voice interview with a GPT Realtime AI agent — time-constrained, context-aware, and fully scored by GPT-4o afterwards.
+
+RecruitFlow is an AI-powered hiring automation platform designed to simplify and speed up the recruitment process. Instead of manually reviewing hundreds of resumes, HR teams can simply paste a Google Drive folder containing candidate CVs, enter the job description, and choose how many top candidates they want to shortlist.
+
+The platform automatically downloads and processes every resume, extracts text and relevant external links, and uses GPT-4o to intelligently evaluate candidates based on skills, experience, and job relevance. The entire screening pipeline runs asynchronously for faster processing, while live progress updates are streamed directly to the browser in real time. Once completed, RecruitFlow presents a ranked list of the best candidates along with direct Drive preview links for quick review.
+
+After shortlisting, HR can instantly send personalised assessment invitations to candidates via email. Each candidate receives a unique secure link where they can upload their CV and participate in a live AI-powered voice interview.
+
+Using OpenAI Realtime AI with WebRTC, RecruitFlow conducts structured, context-aware interviews based on both the candidate’s resume and the job description. The interview is fully interactive, time-constrained, and designed to simulate a real screening round. After completion, GPT-4o automatically analyzes the interview transcript and generates detailed evaluation reports including candidate score, fit recommendation, strengths, and concerns.
+
+RecruitFlow transforms traditional hiring into a faster, smarter, and more scalable AI-driven recruitment experience.
+
 
 ---
+
+## Problem Statement
+Build an AI-powered recruitment assistant that automates CV screening, ranks candidates against a job description, and conducts timed AI assessments to reduce manual HR effort and improve hiring speed/quality.
+
+## Demo Video Link
+- Add your demo link here: `https://your-demo-link-here`
+
+## Features & Functionalities
+- HR login/register with JWT auth
+- Create screening jobs from public Google Drive CV folders
+- Async CV parsing + link enrichment + LLM-based scoring
+- Live progress updates via SSE during screening
+- Top-k ranking, score insights, and job history
+- Shortlist email sending with personalized assessment links
+- Candidate assessment portal with CV upload + voice interview
+- Automated post-interview summary with score and fit recommendation
+
+## Backend Architecture / System Design
+- See [System Flow](#system-flow), [Voice Assessment Flow](#voice-assessment-flow), and [Worker Internals — Single CV](#worker-internals--single-cv)
+- Backend is built as modular FastAPI services (auth, jobs, results, assessment, worker) over PostgreSQL with Alembic migrations
+
+## Implementation Approach & Workflow
+- See [How It Works](#how-it-works) for end-to-end screening and assessment workflow
+- Uses async batch processing (`asyncio.gather`) for throughput and SSE for real-time UX
+
+## APIs / Models / Tools Used
+- See [Tech Stack](#tech-stack) and [API Endpoints](#api-endpoints)
+- Core AI models: `gpt-4o` (CV scoring + summarization), `gpt-realtime-1.5` (live voice interview)
 
 ## How It Works
 
@@ -13,7 +51,7 @@ After shortlisting, HR can send personalised assessment emails. Each candidate g
 1. HR logs in and fills the screening form — Drive folder link, top-k count, job description
 2. Backend creates a screening job record and immediately starts a background pipeline
 3. All CVs are downloaded from the public Google Drive folder
-4. CVs are split into batches of 5; all batches run **in parallel** via `asyncio.gather`
+4. CVs are split into batches of 2 by default (configurable via `WORKER_BATCH_SIZE`); all batches run **in parallel** via `asyncio.gather`
 5. Each CV is processed: text extracted → links found → link content fetched asynchronously → GPT-4o scores the candidate
 6. Progress streams to the browser in real time via SSE (Server-Sent Events)
 7. When complete, the top-k candidates are displayed ranked by score with Drive preview links
@@ -48,7 +86,7 @@ flowchart TD
     F --> H[List PDF files in\nGoogle Drive folder]
     H --> I[Update total_cvs in DB]
     I --> J[Create cv_result rows in DB]
-    J --> K[Split CVs into\nbatches of 5]
+    J --> K[Split CVs into\nbatches of 2 by default]
 
     K --> L1[Worker 1\nbatch 1]
     K --> L2[Worker 2\nbatch 2]
@@ -244,6 +282,13 @@ recruitflow/
 
 ## Setup & Run
 
+## Installation Steps
+1. Clone the repository
+2. Move to project root (`recruitflow/`)
+3. Copy env template and add required secrets
+4. Start services and apply migrations
+5. Open app at `http://localhost:8000`
+
 ### Prerequisites
 
 - Docker + Docker Compose
@@ -264,6 +309,8 @@ OPENAI_API_KEY=sk-...
 JWT_SECRET_KEY=<any-long-random-string>
 POSTGRES_PASSWORD=<choose-a-password>
 ```
+
+For full env details, see [Environment Variables](#environment-variables) and [`.env.example`](./.env.example).
 
 ---
 
@@ -397,7 +444,7 @@ Open `http://localhost:8000`
 | `OPENAI_API_KEY` | — | OpenAI secret key (used for CV scoring, summarizer, and Realtime token) |
 | `OPENAI_MODEL` | `gpt-4o` | Model for CV scoring and assessment summarization |
 | `OPENAI_REALTIME_MODEL` | `gpt-realtime-1.5` | Model for live voice interviews |
-| `WORKER_BATCH_SIZE` | `5` | CVs per worker batch |
+| `WORKER_BATCH_SIZE` | `2` | CVs per worker batch |
 | `LINK_FETCH_MAX_CHARS` | `1000` | Max chars extracted per link |
 | `LINK_FETCH_TIMEOUT_SECS` | `10` | HTTP timeout for link fetching |
 | `JWT_SECRET_KEY` | — | Secret for signing JWT tokens |
@@ -407,3 +454,48 @@ Open `http://localhost:8000`
 | `GMAIL_APP_PASSWORD` | — | Gmail app-specific password (not your regular password) |
 | `ENV` | `dev` | `dev` = pretty logs · `prod` = JSON logs |
 | `LOG_LEVEL` | `INFO` | Root log level |
+
+---
+
+## Screenshots (Optional)
+1. `screenshot-224`
+![screenshot-224](docs/screenshots/screenshot-224.png)
+
+2. `screenshot-226`
+![screenshot-226](docs/screenshots/screenshot-226.png)
+
+3. `screenshot-227`
+![screenshot-227](docs/screenshots/screenshot-227.png)
+
+4. `screenshot-228`
+![screenshot-228](docs/screenshots/screenshot-228.png)
+
+5. `screenshot-229`
+![screenshot-229](docs/screenshots/screenshot-229.png)
+
+6. `screenshot-231`
+![screenshot-231](docs/screenshots/screenshot-231.png)
+
+7. `screenshot-232`
+![screenshot-232](docs/screenshots/screenshot-232.png)
+
+8. `screenshot-233`
+![screenshot-233](docs/screenshots/screenshot-233.png)
+
+9. `screenshot-234`
+![screenshot-234](docs/screenshots/screenshot-234.png)
+
+10. `screenshot-235`
+![screenshot-235](docs/screenshots/screenshot-235.png)
+
+11. `screenshot-236`
+![screenshot-236](docs/screenshots/screenshot-236.png)
+
+12. `screenshot-237`
+![screenshot-237](docs/screenshots/screenshot-237.png)
+
+13. `screenshot-238`
+![screenshot-238](docs/screenshots/screenshot-238.png)
+
+14. `screenshot-239`
+![screenshot-239](docs/screenshots/screenshot-239.png)

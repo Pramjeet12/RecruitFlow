@@ -71,7 +71,7 @@ This command:
 **Worker Pipeline (Async):**
 - Download all PDFs from Google Drive folder
 - Create `CvResult` rows in DB (one per PDF, status=pending)
-- Split CVs into **batches of 5** (configurable: `WORKER_BATCH_SIZE`)
+- Split CVs into configurable batches (default: **2**, via `WORKER_BATCH_SIZE`)
 - Run all batches **concurrently** via `asyncio.gather()`
 - Each CV: extract text → find links (regex + PDF annotations) → async-fetch all links concurrently → send to GPT-4o for structured analysis → persist score + reasoning
 
@@ -144,7 +144,7 @@ See `.env.example`. Key variables:
 
 **OpenAI:**
 - `OPENAI_API_KEY` (required)
-- `OPENAI_MODEL=gpt-4o` (fixed; not user-configurable)
+- `OPENAI_MODEL=gpt-4o` (configurable via environment variable)
 
 **Worker:**
 - `WORKER_BATCH_SIZE=2` — CVs per batch
@@ -249,4 +249,3 @@ See `.env.example`. Key variables:
 4. **OpenAI costs:** Each CV analysis costs money; batch size and timeouts affect total cost
 5. **Link fetch timeouts:** Long-running sites (e.g., GitHub profile with thousands of repos) may timeout
 6. **No worker process management:** Jobs run in the FastAPI event loop; if server crashes, in-flight jobs are lost (no persistence of partial progress)
-

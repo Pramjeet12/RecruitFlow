@@ -19,8 +19,9 @@ RecruitFlow transforms traditional hiring into a faster, smarter, and more scala
 ## Problem Statement
 Build an AI-powered recruitment assistant that automates CV screening, ranks candidates against a job description, and conducts timed AI assessments to reduce manual HR effort and improve hiring speed/quality.
 
-## Demo Video Link
-- Add your demo link here: `https://your-demo-link-here`
+## Demo Video
+- [RecruitFlow-How to use](https://drive.google.com/file/d/1bHjALqD6gJzcHbBCa2-0py6kWJSyF6xl/view?usp=sharing)
+- [RecruitFlow-Explanation](https://drive.google.com/file/d/1C5PsgChLSkwswBjq6V3BYzNntNw-Q94Y/view?usp=sharing)
 
 ## Features & Functionalities
 - HR login/register with JWT auth
@@ -457,45 +458,42 @@ Open `http://localhost:8000`
 
 ---
 
-## Screenshots (Optional)
-1. `screenshot-224`
-![screenshot-224](docs/screenshots/screenshot-224.png)
+## Screenshots
+1. `Step 01 - Auth Register`
+![Step 01 - Auth Register](docs/screenshots/step-01-auth-register.png)
 
-2. `screenshot-226`
-![screenshot-226](docs/screenshots/screenshot-226.png)
+2. `Step 02 - New Screening Job Form`
+![Step 02 - New Screening Job Form](docs/screenshots/step-02-new-screening-job-form.png)
 
-3. `screenshot-227`
-![screenshot-227](docs/screenshots/screenshot-227.png)
+3. `Step 03 - Drive Scan In Progress`
+![Step 03 - Drive Scan In Progress](docs/screenshots/step-03-drive-scan-in-progress.png)
 
-4. `screenshot-228`
-![screenshot-228](docs/screenshots/screenshot-228.png)
+4. `Step 04 - Top Candidates Dashboard`
+![Step 04 - Top Candidates Dashboard](docs/screenshots/step-04-top-candidates-dashboard.png)
 
-5. `screenshot-229`
-![screenshot-229](docs/screenshots/screenshot-229.png)
+5. `Step 05 - Send Shortlist Email Modal`
+![Step 05 - Send Shortlist Email Modal](docs/screenshots/step-05-send-shortlist-email-modal.png)
 
-6. `screenshot-231`
-![screenshot-231](docs/screenshots/screenshot-231.png)
+6. `Step 06 - Shortlist Email Inbox`
+![Step 06 - Shortlist Email Inbox](docs/screenshots/step-06-shortlist-email-inbox.png)
 
-7. `screenshot-232`
-![screenshot-232](docs/screenshots/screenshot-232.png)
+7. `Step 07 - Shortlist Email Link Preview`
+![Step 07 - Shortlist Email Link Preview](docs/screenshots/step-07-shortlist-email-link-preview.png)
 
-8. `screenshot-233`
-![screenshot-233](docs/screenshots/screenshot-233.png)
+8. `Step 08 - Assessment CV Upload`
+![Step 08 - Assessment CV Upload](docs/screenshots/step-08-assessment-cv-upload.png)
 
-9. `screenshot-234`
-![screenshot-234](docs/screenshots/screenshot-234.png)
+9. `Step 09 - Assessment Ready Screen`
+![Step 09 - Assessment Ready Screen](docs/screenshots/step-09-assessment-ready-screen.png)
 
-10. `screenshot-235`
-![screenshot-235](docs/screenshots/screenshot-235.png)
+10. `Step 10 - Live AI Interview`
+![Step 10 - Live AI Interview](docs/screenshots/step-10-live-ai-interview.png)
 
-11. `screenshot-236`
-![screenshot-236](docs/screenshots/screenshot-236.png)
+11. `Step 11 - Interview Complete Screen`
+![Step 11 - Interview Complete Screen](docs/screenshots/step-11-interview-complete-screen.png)
 
-12. `screenshot-237`
-![screenshot-237](docs/screenshots/screenshot-237.png)
+12. `Step 12 - Assessment Summary Modal`
+![Step 12 - Assessment Summary Modal](docs/screenshots/step-12-assessment-summary-modal.png)
 
-13. `screenshot-238`
-![screenshot-238](docs/screenshots/screenshot-238.png)
-
-14. `screenshot-239`
-![screenshot-239](docs/screenshots/screenshot-239.png)
+13. `Step 13 - Assessment Tag on Results`
+![Step 13 - Assessment Tag on Results](docs/screenshots/step-13-assessment-tag-on-results.png)
